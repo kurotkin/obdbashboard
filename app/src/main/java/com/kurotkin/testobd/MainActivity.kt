@@ -3,23 +3,18 @@ package com.kurotkin.testobd
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.graphics.Typeface
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.kurotkin.testobd.obd.commands.SpeedCommand
-import com.kurotkin.testobd.obd.commands.control.ModuleVoltageCommand
-import com.kurotkin.testobd.obd.commands.engine.LoadCommand
-import com.kurotkin.testobd.obd.commands.engine.MassAirFlowCommand
-import com.kurotkin.testobd.obd.commands.engine.OilTempCommand
 import com.kurotkin.testobd.obd.commands.engine.RPMCommand
-import com.kurotkin.testobd.obd.commands.fuel.FuelLevelCommand
 import com.kurotkin.testobd.obd.commands.protocol.EchoOffCommand
 import com.kurotkin.testobd.obd.commands.protocol.LineFeedOffCommand
 import com.kurotkin.testobd.obd.commands.protocol.SelectProtocolCommand
 import com.kurotkin.testobd.obd.commands.protocol.TimeoutCommand
-import com.kurotkin.testobd.obd.commands.temperature.AmbientAirTemperatureCommand
 import com.kurotkin.testobd.obd.enums.ObdProtocols
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -38,11 +33,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var voltageTextView: TextView
     private lateinit var oilTempTextView: TextView
     private lateinit var airTempTextView: TextView
+    private var carrentTime: Long = Date().time
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val typeFont: Typeface = Typeface.createFromAsset(assets, "fonts/menlo-regular.ttf")
         speedTextView = findViewById(R.id.speed)
+        speedTextView.typeface = typeFont
         rpmTextView = findViewById(R.id.rpm)
         loadTextView = findViewById(R.id.load)
         airTextView = findViewById(R.id.air)
@@ -50,6 +48,8 @@ class MainActivity : AppCompatActivity() {
         voltageTextView = findViewById(R.id.voltage)
         oilTempTextView = findViewById(R.id.oil_temp)
         airTempTextView = findViewById(R.id.air_temp)
+        carrentTime = Date().time
+        text.text = "Инициализация"
         bluetooth()
     }
 
@@ -76,6 +76,8 @@ class MainActivity : AppCompatActivity() {
             val position: Int = (dialog as AlertDialog).getListView().getCheckedItemPosition()
             val deviceAddress = devices[position]
             deviceSelectAddress = deviceAddress
+            val t = Date().time
+            text.text = "${controlTime()}ms Опрос датчиков"
             if (deviceSelectAddress != null){
                 Toast.makeText(this, "Выбран $deviceSelectAddress", Toast.LENGTH_SHORT).show()
                 bluetoothWork(deviceSelectAddress!!)
@@ -83,14 +85,22 @@ class MainActivity : AppCompatActivity() {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({
                         if(it != null) write(it)
+                        text.text = "Опрос..."
                     }, {
-                        text.text = it.message
+                        text.text = "${controlTime()}ms ${it.message}"
                     }, {}, {})
             }
         }
 
         alertDialog.setTitle("Choose Bluetooth device")
         alertDialog.show()
+    }
+
+    fun controlTime() : String {
+        val t = Date().time
+        val str  = "${t - carrentTime}"
+        carrentTime = t
+        return str
     }
 
     fun write(eparam: EParam){
@@ -120,32 +130,42 @@ class MainActivity : AppCompatActivity() {
 
                 val engineRpmCommand = RPMCommand()
                 val speedCommand = SpeedCommand()
-                val loadCommand = LoadCommand()
-                val moduleVoltageCommand = ModuleVoltageCommand()
-                val massAirFlowCommand = MassAirFlowCommand()
-                val oilTempCommand = OilTempCommand()
-                val fuelLevelCommand = FuelLevelCommand()
-                val ambientAirTemperatureCommand = AmbientAirTemperatureCommand()
+//                val loadCommand = LoadCommand()
+//                val moduleVoltageCommand = ModuleVoltageCommand()
+//                val massAirFlowCommand = MassAirFlowCommand()
+//                val oilTempCommand = OilTempCommand()
+//                val fuelLevelCommand = FuelLevelCommand()
+//                val ambientAirTemperatureCommand = AmbientAirTemperatureCommand()
 
                 while (!Thread.currentThread().isInterrupted) {
                     engineRpmCommand.run(socket.inputStream, socket.outputStream)
                     speedCommand.run(socket.inputStream, socket.outputStream)
-                    loadCommand.run(socket.inputStream, socket.outputStream)
-                    moduleVoltageCommand.run(socket.inputStream, socket.outputStream)
-                    massAirFlowCommand.run(socket.inputStream, socket.outputStream)
-                    oilTempCommand.run(socket.inputStream, socket.outputStream)
-                    fuelLevelCommand.run(socket.inputStream, socket.outputStream)
-                    ambientAirTemperatureCommand.run(socket.inputStream, socket.outputStream)
+//                    loadCommand.run(socket.inputStream, socket.outputStream)
+//                    moduleVoltageCommand.run(socket.inputStream, socket.outputStream)
+//                    massAirFlowCommand.run(socket.inputStream, socket.outputStream)
+//                    oilTempCommand.run(socket.inputStream, socket.outputStream)
+//                    fuelLevelCommand.run(socket.inputStream, socket.outputStream)
+//                    ambientAirTemperatureCommand.run(socket.inputStream, socket.outputStream)
 
+//                    str.onNext(EParam(
+//                        speed = speedCommand.formattedResult,
+//                        rpm = engineRpmCommand.formattedResult,
+//                        load = loadCommand.formattedResult,
+//                        voltage = moduleVoltageCommand.formattedResult,
+//                        massAirFlow = massAirFlowCommand.formattedResult,
+//                        oilTemp = oilTempCommand.formattedResult,
+//                        fuel = fuelLevelCommand.formattedResult,
+//                        airTemperature = ambientAirTemperatureCommand.formattedResult
+//                    ))
                     str.onNext(EParam(
                         speed = speedCommand.formattedResult,
                         rpm = engineRpmCommand.formattedResult,
-                        load = loadCommand.formattedResult,
-                        voltage = moduleVoltageCommand.formattedResult,
-                        massAirFlow = massAirFlowCommand.formattedResult,
-                        oilTemp = oilTempCommand.formattedResult,
-                        fuel = fuelLevelCommand.formattedResult,
-                        airTemperature = ambientAirTemperatureCommand.formattedResult
+                        load = "0",
+                        voltage = "0",
+                        massAirFlow = "0",
+                        oilTemp = "0",
+                        fuel = "0",
+                        airTemperature = "0"
                     ))
                 }
 

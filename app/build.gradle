@@ -34,6 +34,9 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.1.9'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
 
+    implementation 'io.github.inflationx:calligraphy3:3.1.1'
+    implementation 'io.github.inflationx:viewpump:2.0.3'
+
     //implementation 'com.github.pires:obd-java-api:1.0'
 
     testImplementation 'junit:junit:4.12'
