@@ -3,18 +3,26 @@ package com.kurotkin.testobd
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.github.anastr.speedviewlib.AwesomeSpeedometer
+import com.github.anastr.speedviewlib.PointerSpeedometer
+import com.github.anastr.speedviewlib.SpeedView
 import com.kurotkin.testobd.obd.commands.SpeedCommand
+import com.kurotkin.testobd.obd.commands.control.ModuleVoltageCommand
+import com.kurotkin.testobd.obd.commands.engine.LoadCommand
+import com.kurotkin.testobd.obd.commands.engine.OilTempCommand
 import com.kurotkin.testobd.obd.commands.engine.RPMCommand
 import com.kurotkin.testobd.obd.commands.protocol.EchoOffCommand
 import com.kurotkin.testobd.obd.commands.protocol.LineFeedOffCommand
 import com.kurotkin.testobd.obd.commands.protocol.SelectProtocolCommand
 import com.kurotkin.testobd.obd.commands.protocol.TimeoutCommand
+import com.kurotkin.testobd.obd.commands.temperature.AmbientAirTemperatureCommand
 import com.kurotkin.testobd.obd.enums.ObdProtocols
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -33,6 +41,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var voltageTextView: TextView
     private lateinit var oilTempTextView: TextView
     private lateinit var airTempTextView: TextView
+
+    private lateinit var speedView: SpeedView
+    private lateinit var awesomeSpeedometer: AwesomeSpeedometer
+    private lateinit var pointerSpeedometer: PointerSpeedometer
+
     private var carrentTime: Long = Date().time
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +61,18 @@ class MainActivity : AppCompatActivity() {
         voltageTextView = findViewById(R.id.voltage)
         oilTempTextView = findViewById(R.id.oil_temp)
         airTempTextView = findViewById(R.id.air_temp)
+
+        speedView = findViewById<SpeedView>(R.id.speedView)
+        speedView.setMinMaxSpeed(0F, 150F)
+        speedView.speedTo(10F, 100)
+
+        awesomeSpeedometer = findViewById<AwesomeSpeedometer>(R.id.awesomeSpeedometer)
+        //awesomeSpeedometer.setSpeedometerColor(Color.RED)
+        awesomeSpeedometer.speedTo(10F, 2000)
+
+        pointerSpeedometer = findViewById<PointerSpeedometer>(R.id.pointerSpeedometer)
+        pointerSpeedometer.speedTo(10F, 100)
+
         carrentTime = Date().time
         text.text = "Инициализация"
         bluetooth()
@@ -77,22 +102,30 @@ class MainActivity : AppCompatActivity() {
             val deviceAddress = devices[position]
             deviceSelectAddress = deviceAddress
             val t = Date().time
-            text.text = "${controlTime()}ms Опрос датчиков"
+            text.text = "Опрос датчиков"
+            this.title = "${controlTime()} ms"
             if (deviceSelectAddress != null){
                 Toast.makeText(this, "Выбран $deviceSelectAddress", Toast.LENGTH_SHORT).show()
+
+                speedView.speedTo(90F, 100)
+                awesomeSpeedometer.speedTo(90F, 100)
+                pointerSpeedometer.speedTo(90F, 100)
+
                 bluetoothWork(deviceSelectAddress!!)
                     .subscribeOn(Schedulers.newThread())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({
                         if(it != null) write(it)
                         text.text = "Опрос..."
+                        this.title = "${controlTime()} ms"
                     }, {
-                        text.text = "${controlTime()}ms ${it.message}"
+                        text.text = "${it.message}"
+                        this.title = "${controlTime()} ms"
                     }, {}, {})
             }
         }
 
-        alertDialog.setTitle("Choose Bluetooth device")
+        alertDialog.setTitle("Выбирите Bluetooth устройство")
         alertDialog.show()
     }
 
@@ -125,27 +158,27 @@ class MainActivity : AppCompatActivity() {
 
                 EchoOffCommand().run(socket.inputStream, socket.outputStream)
                 LineFeedOffCommand().run(socket.inputStream, socket.outputStream)
-                TimeoutCommand(125).run(socket.inputStream, socket.outputStream)
+                TimeoutCommand(200).run(socket.inputStream, socket.outputStream)
                 SelectProtocolCommand(ObdProtocols.AUTO).run(socket.inputStream, socket.outputStream)
 
                 val engineRpmCommand = RPMCommand()
                 val speedCommand = SpeedCommand()
-//                val loadCommand = LoadCommand()
-//                val moduleVoltageCommand = ModuleVoltageCommand()
+                val loadCommand = LoadCommand()
+                val moduleVoltageCommand = ModuleVoltageCommand()
 //                val massAirFlowCommand = MassAirFlowCommand()
-//                val oilTempCommand = OilTempCommand()
+                val oilTempCommand = OilTempCommand()
 //                val fuelLevelCommand = FuelLevelCommand()
-//                val ambientAirTemperatureCommand = AmbientAirTemperatureCommand()
+                val ambientAirTemperatureCommand = AmbientAirTemperatureCommand()
 
                 while (!Thread.currentThread().isInterrupted) {
                     engineRpmCommand.run(socket.inputStream, socket.outputStream)
                     speedCommand.run(socket.inputStream, socket.outputStream)
-//                    loadCommand.run(socket.inputStream, socket.outputStream)
-//                    moduleVoltageCommand.run(socket.inputStream, socket.outputStream)
+                    loadCommand.run(socket.inputStream, socket.outputStream)
+                    moduleVoltageCommand.run(socket.inputStream, socket.outputStream)
 //                    massAirFlowCommand.run(socket.inputStream, socket.outputStream)
-//                    oilTempCommand.run(socket.inputStream, socket.outputStream)
+                    oilTempCommand.run(socket.inputStream, socket.outputStream)
 //                    fuelLevelCommand.run(socket.inputStream, socket.outputStream)
-//                    ambientAirTemperatureCommand.run(socket.inputStream, socket.outputStream)
+                    ambientAirTemperatureCommand.run(socket.inputStream, socket.outputStream)
 
 //                    str.onNext(EParam(
 //                        speed = speedCommand.formattedResult,
@@ -157,15 +190,24 @@ class MainActivity : AppCompatActivity() {
 //                        fuel = fuelLevelCommand.formattedResult,
 //                        airTemperature = ambientAirTemperatureCommand.formattedResult
 //                    ))
+
+                    var speed: Boolean = true
+                    var rpmTextView: Boolean = true
+                    var loadTextView: Boolean = true
+                    var airTextView: Boolean = false
+                    var fuelTextView: Boolean = false
+                    var voltageTextView: Boolean = false
+                    var oilTempTextView: Boolean = false
+                    var airTempTextView: Boolean = false
                     str.onNext(EParam(
-                        speed = speedCommand.formattedResult,
+                        speed = speedCommand.metricSpeed.toString(),
                         rpm = engineRpmCommand.formattedResult,
-                        load = "0",
-                        voltage = "0",
+                        load = loadCommand.formattedResult,
+                        voltage = moduleVoltageCommand.formattedResult,
                         massAirFlow = "0",
-                        oilTemp = "0",
+                        oilTemp = oilTempCommand.formattedResult,
                         fuel = "0",
-                        airTemperature = "0"
+                        airTemperature = ambientAirTemperatureCommand.formattedResult
                     ))
                 }
 
@@ -177,3 +219,4 @@ class MainActivity : AppCompatActivity() {
         }
 
 }
+

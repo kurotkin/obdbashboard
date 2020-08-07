@@ -17,8 +17,10 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ScrollView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,7 +53,7 @@
 
                     <TextView
                         android:layout_width="0dp"
-                        android:layout_weight="0.8"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
                         android:padding="3dip"
                         android:text="Значение" />
@@ -74,15 +76,15 @@
                         android:id="@+id/speed"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.8"
                         android:layout_gravity="top"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
-                        android:paddingVertical="0dp"
                         android:paddingHorizontal="3dp"
+                        android:paddingVertical="0dp"
                         android:text="123"
-                        android:textStyle="bold"
                         android:textColor="@android:color/holo_orange_dark"
-                        android:textSize="140sp"/>
+                        android:textSize="92sp"
+                        android:textStyle="bold" />
                 </TableRow>
 
                 <TableRow
@@ -101,7 +103,7 @@
                     <TextView
                         android:id="@+id/rpm"
                         android:layout_width="0dp"
-                        android:layout_weight="0.8"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
                         android:padding="3dip"
                         android:text="0"
@@ -126,7 +128,7 @@
                     <TextView
                         android:id="@+id/load"
                         android:layout_width="0dp"
-                        android:layout_weight="0.8"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
                         android:padding="3dip"
                         android:text="0"
@@ -151,7 +153,7 @@
                     <TextView
                         android:id="@+id/air"
                         android:layout_width="0dp"
-                        android:layout_weight="0.8"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
                         android:padding="3dip"
                         android:text="0"
@@ -176,7 +178,7 @@
                     <TextView
                         android:id="@+id/fuel"
                         android:layout_width="0dp"
-                        android:layout_weight="0.8"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
                         android:padding="3dip"
                         android:text="0"
@@ -201,7 +203,7 @@
                     <TextView
                         android:id="@+id/voltage"
                         android:layout_width="0dp"
-                        android:layout_weight="0.8"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
                         android:padding="3dip"
                         android:text="0"
@@ -226,7 +228,7 @@
                     <TextView
                         android:id="@+id/oil_temp"
                         android:layout_width="0dp"
-                        android:layout_weight="0.8"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
                         android:padding="3dip"
                         android:text="0"
@@ -251,7 +253,7 @@
                     <TextView
                         android:id="@+id/air_temp"
                         android:layout_width="0dp"
-                        android:layout_weight="0.8"
+                        android:layout_weight="0.7"
                         android:background="@drawable/shape_edittext"
                         android:padding="3dip"
                         android:text="0"
@@ -259,8 +261,28 @@
                         android:textSize="32sp"
                         android:textStyle="bold" />
                 </TableRow>
-
             </TableLayout>
+
+            <com.github.anastr.speedviewlib.SpeedView
+                android:id="@+id/speedView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <com.github.anastr.speedviewlib.AwesomeSpeedometer
+                android:id="@+id/awesomeSpeedometer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:sv_indicatorColor="#D81B60"
+                app:sv_markColor="#D81B60"
+                app:sv_speedTextSize="62dp"/>
+
+            <com.github.anastr.speedviewlib.PointerSpeedometer
+                android:id="@+id/pointerSpeedometer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:sv_indicatorColor="#F4511E"
+                app:sv_speedTextColor="#43A047"
+                app:sv_speedTextSize="62dp"/>
         </LinearLayout>
     </ScrollView>
 
