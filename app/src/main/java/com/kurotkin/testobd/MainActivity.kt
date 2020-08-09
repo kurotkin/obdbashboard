@@ -16,8 +16,10 @@ import com.github.anastr.speedviewlib.SpeedView
 import com.kurotkin.testobd.obd.commands.SpeedCommand
 import com.kurotkin.testobd.obd.commands.control.ModuleVoltageCommand
 import com.kurotkin.testobd.obd.commands.engine.LoadCommand
+import com.kurotkin.testobd.obd.commands.engine.MassAirFlowCommand
 import com.kurotkin.testobd.obd.commands.engine.OilTempCommand
 import com.kurotkin.testobd.obd.commands.engine.RPMCommand
+import com.kurotkin.testobd.obd.commands.fuel.FuelLevelCommand
 import com.kurotkin.testobd.obd.commands.protocol.EchoOffCommand
 import com.kurotkin.testobd.obd.commands.protocol.LineFeedOffCommand
 import com.kurotkin.testobd.obd.commands.protocol.SelectProtocolCommand
@@ -63,14 +65,16 @@ class MainActivity : AppCompatActivity() {
         airTempTextView = findViewById(R.id.air_temp)
 
         speedView = findViewById<SpeedView>(R.id.speedView)
-        speedView.setMinMaxSpeed(0F, 150F)
+        speedView.setMinMaxSpeed(0F, 5000F)
         speedView.speedTo(10F, 100)
 
         awesomeSpeedometer = findViewById<AwesomeSpeedometer>(R.id.awesomeSpeedometer)
+        awesomeSpeedometer.setMinMaxSpeed(0F, 5000F)
         //awesomeSpeedometer.setSpeedometerColor(Color.RED)
         awesomeSpeedometer.speedTo(10F, 2000)
 
         pointerSpeedometer = findViewById<PointerSpeedometer>(R.id.pointerSpeedometer)
+        pointerSpeedometer.setMinMaxSpeed(0F, 5000F)
         pointerSpeedometer.speedTo(10F, 100)
 
         carrentTime = Date().time
@@ -165,20 +169,20 @@ class MainActivity : AppCompatActivity() {
                 val speedCommand = SpeedCommand()
                 val loadCommand = LoadCommand()
                 val moduleVoltageCommand = ModuleVoltageCommand()
-//                val massAirFlowCommand = MassAirFlowCommand()
+                val massAirFlowCommand = MassAirFlowCommand()
                 val oilTempCommand = OilTempCommand()
-//                val fuelLevelCommand = FuelLevelCommand()
-                val ambientAirTemperatureCommand = AmbientAirTemperatureCommand()
+                val fuelLevelCommand = FuelLevelCommand()
+//                val ambientAirTemperatureCommand = AmbientAirTemperatureCommand()
 
                 while (!Thread.currentThread().isInterrupted) {
                     engineRpmCommand.run(socket.inputStream, socket.outputStream)
                     speedCommand.run(socket.inputStream, socket.outputStream)
                     loadCommand.run(socket.inputStream, socket.outputStream)
                     moduleVoltageCommand.run(socket.inputStream, socket.outputStream)
-//                    massAirFlowCommand.run(socket.inputStream, socket.outputStream)
+                    massAirFlowCommand.run(socket.inputStream, socket.outputStream)
                     oilTempCommand.run(socket.inputStream, socket.outputStream)
-//                    fuelLevelCommand.run(socket.inputStream, socket.outputStream)
-                    ambientAirTemperatureCommand.run(socket.inputStream, socket.outputStream)
+                    fuelLevelCommand.run(socket.inputStream, socket.outputStream)
+//                    ambientAirTemperatureCommand.run(socket.inputStream, socket.outputStream)
 
 //                    str.onNext(EParam(
 //                        speed = speedCommand.formattedResult,
@@ -200,14 +204,14 @@ class MainActivity : AppCompatActivity() {
                     var oilTempTextView: Boolean = false
                     var airTempTextView: Boolean = false
                     str.onNext(EParam(
-                        speed = speedCommand.metricSpeed.toString(),
+                        speed = speedCommand.formattedResult,
                         rpm = engineRpmCommand.formattedResult,
                         load = loadCommand.formattedResult,
                         voltage = moduleVoltageCommand.formattedResult,
-                        massAirFlow = "0",
+                        massAirFlow = massAirFlowCommand.formattedResult,
                         oilTemp = oilTempCommand.formattedResult,
-                        fuel = "0",
-                        airTemperature = ambientAirTemperatureCommand.formattedResult
+                        fuel = fuelLevelCommand.formattedResult,
+                        airTemperature = "0"
                     ))
                 }
 
