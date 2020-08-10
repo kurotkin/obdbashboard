@@ -1,7 +1,7 @@
 package com.kurotkin.testobd
 
 data class EParam(
-    val speed: String,
+    val speed: Int,
     val rpm: String,
     val load: String,
     val voltage: String,
