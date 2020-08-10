@@ -24,6 +24,7 @@ import com.kurotkin.testobd.obd.commands.protocol.LineFeedOffCommand
 import com.kurotkin.testobd.obd.commands.protocol.SelectProtocolCommand
 import com.kurotkin.testobd.obd.commands.protocol.TimeoutCommand
 import com.kurotkin.testobd.obd.commands.temperature.AmbientAirTemperatureCommand
+import com.kurotkin.testobd.obd.commands.temperature.EngineCoolantTemperatureCommand
 import com.kurotkin.testobd.obd.enums.ObdProtocols
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -137,7 +138,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun write(eparam: EParam){
-        speedTextView.text = "$eparam.speed"
+        speedTextView.text = eparam.speed.toString()
         rpmTextView.text = eparam.rpm
         loadTextView.text = eparam.load
         airTextView.text = eparam.massAirFlow
@@ -174,7 +175,7 @@ class MainActivity : AppCompatActivity() {
                 val loadCommand = LoadCommand()
                 val moduleVoltageCommand = ModuleVoltageCommand()
                 val massAirFlowCommand = MassAirFlowCommand()
-//                val oilTempCommand = OilTempCommand()
+                val engineCoolantTemperatureCommand = EngineCoolantTemperatureCommand()
                 val fuelLevelCommand = FuelLevelCommand()
                 val ambientAirTemperatureCommand = AmbientAirTemperatureCommand()
 
@@ -184,7 +185,7 @@ class MainActivity : AppCompatActivity() {
                     loadCommand.run(socket.inputStream, socket.outputStream)
                     moduleVoltageCommand.run(socket.inputStream, socket.outputStream)
                     massAirFlowCommand.run(socket.inputStream, socket.outputStream)
-//                    oilTempCommand.run(socket.inputStream, socket.outputStream)
+                    engineCoolantTemperatureCommand.run(socket.inputStream, socket.outputStream)
                     fuelLevelCommand.run(socket.inputStream, socket.outputStream)
                     ambientAirTemperatureCommand.run(socket.inputStream, socket.outputStream)
 
@@ -213,7 +214,7 @@ class MainActivity : AppCompatActivity() {
                         load = loadCommand.formattedResult,
                         voltage = moduleVoltageCommand.formattedResult,
                         massAirFlow = massAirFlowCommand.formattedResult,
-                        oilTemp = "0",
+                        oilTemp = engineCoolantTemperatureCommand.formattedResult,
                         fuel = fuelLevelCommand.formattedResult,
                         airTemperature = ambientAirTemperatureCommand.formattedResult
                     ))
