@@ -3,6 +3,7 @@ package com.kurotkin.testobd
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.graphics.Typeface
 import android.os.Bundle
 import android.widget.ArrayAdapter
@@ -18,6 +19,7 @@ import com.kurotkin.testobd.obd.commands.control.ModuleVoltageCommand
 import com.kurotkin.testobd.obd.commands.engine.LoadCommand
 import com.kurotkin.testobd.obd.commands.engine.MassAirFlowCommand
 import com.kurotkin.testobd.obd.commands.engine.RPMCommand
+import com.kurotkin.testobd.obd.commands.fuel.ConsumptionRateCommand
 import com.kurotkin.testobd.obd.commands.fuel.FuelLevelCommand
 import com.kurotkin.testobd.obd.commands.protocol.EchoOffCommand
 import com.kurotkin.testobd.obd.commands.protocol.LineFeedOffCommand
@@ -43,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var voltageTextView: TextView
     private lateinit var oilTempTextView: TextView
     private lateinit var airTempTextView: TextView
+    private lateinit var consumptionRateView: TextView
 
     private lateinit var speedView: SpeedView
     private lateinit var awesomeSpeedometer: AwesomeSpeedometer
@@ -63,6 +66,7 @@ class MainActivity : AppCompatActivity() {
         voltageTextView = findViewById(R.id.voltage)
         oilTempTextView = findViewById(R.id.oil_temp)
         airTempTextView = findViewById(R.id.air_temp)
+        consumptionRateView = findViewById(R.id.consumption_rate)
 
         speedView = findViewById<SpeedView>(R.id.speedView)
         speedView.setMinMaxSpeed(0F, 150F)
@@ -145,6 +149,7 @@ class MainActivity : AppCompatActivity() {
         voltageTextView.text = eparam.voltage
         oilTempTextView.text = eparam.oilTemp
         airTempTextView.text = eparam.airTemperature
+        consumptionRateView.text = eparam.consumptionRate
 
         try {
             val speed = eparam.speed.toFloat()
@@ -157,18 +162,23 @@ class MainActivity : AppCompatActivity() {
 
     fun bluetoothWork(deviceSelectAddress: String): Observable<EParam> =
         Observable.create{ str ->
+            var socket :BluetoothSocket? = null
             try {
                 val btAdapter = BluetoothAdapter.getDefaultAdapter()
                 val device: BluetoothDevice = btAdapter.getRemoteDevice(deviceSelectAddress)
                 val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-                val socket = device.createInsecureRfcommSocketToServiceRecord(uuid)
+                socket = device.createInsecureRfcommSocketToServiceRecord(uuid)
                 socket.connect()
 
-                EchoOffCommand().run(socket.inputStream, socket.outputStream)
-                LineFeedOffCommand().run(socket.inputStream, socket.outputStream)
-                TimeoutCommand(200).run(socket.inputStream, socket.outputStream)
-                SelectProtocolCommand(ObdProtocols.AUTO).run(socket.inputStream, socket.outputStream)
+                EchoOffCommand().run(socket.inputStream, socket.outputStream)                           // "AT E0"
+                LineFeedOffCommand().run(socket.inputStream, socket.outputStream)                       // "AT L0"
+                TimeoutCommand(200).run(socket.inputStream, socket.outputStream)                // "AT ST " + timeout
+                SelectProtocolCommand(ObdProtocols.AUTO).run(socket.inputStream, socket.outputStream)   // "AT SP " + protocol
+            } catch (e: Exception){
+                str.onError(e)
+            }
 
+            try {
                 val engineRpmCommand = RPMCommand()
                 val speedCommand = Speed()
                 val loadCommand = LoadCommand()
@@ -177,8 +187,9 @@ class MainActivity : AppCompatActivity() {
 //                val oilTempCommand = OilTempCommand()
                 val fuelLevelCommand = FuelLevelCommand()
                 val ambientAirTemperatureCommand = AmbientAirTemperatureCommand()
+                val consumptionRateCommand = ConsumptionRateCommand()
 
-                while (!Thread.currentThread().isInterrupted) {
+                while (!Thread.currentThread().isInterrupted && socket != null) {
                     engineRpmCommand.run(socket.inputStream, socket.outputStream)
                     speedCommand.run(socket.inputStream, socket.outputStream)
                     loadCommand.run(socket.inputStream, socket.outputStream)
@@ -187,6 +198,7 @@ class MainActivity : AppCompatActivity() {
 //                    oilTempCommand.run(socket.inputStream, socket.outputStream)
                     fuelLevelCommand.run(socket.inputStream, socket.outputStream)
                     ambientAirTemperatureCommand.run(socket.inputStream, socket.outputStream)
+                    consumptionRateCommand.run(socket.inputStream, socket.outputStream)
 
 //                    str.onNext(EParam(
 //                        speed = speedCommand.formattedResult,
@@ -199,14 +211,6 @@ class MainActivity : AppCompatActivity() {
 //                        airTemperature = ambientAirTemperatureCommand.formattedResult
 //                    ))
 
-                    var speed: Boolean = true
-                    var rpmTextView: Boolean = true
-                    var loadTextView: Boolean = true
-                    var airTextView: Boolean = false
-                    var fuelTextView: Boolean = false
-                    var voltageTextView: Boolean = false
-                    var oilTempTextView: Boolean = false
-                    var airTempTextView: Boolean = false
                     str.onNext(EParam(
                         speed = speedCommand.getSpeed(),
                         rpm = engineRpmCommand.formattedResult,
@@ -215,7 +219,8 @@ class MainActivity : AppCompatActivity() {
                         massAirFlow = massAirFlowCommand.formattedResult,
                         oilTemp = "0",
                         fuel = fuelLevelCommand.formattedResult,
-                        airTemperature = ambientAirTemperatureCommand.formattedResult
+                        airTemperature = ambientAirTemperatureCommand.formattedResult,
+                        consumptionRate = consumptionRateCommand.formattedResult
                     ))
                 }
 

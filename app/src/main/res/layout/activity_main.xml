@@ -261,6 +261,30 @@
                         android:textSize="32sp"
                         android:textStyle="bold" />
                 </TableRow>
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:weightSum="1">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.3"
+                        android:background="@drawable/shape_edittext"
+                        android:padding="3dip"
+                        android:text="Расход топлива" />
+
+                    <TextView
+                        android:id="@+id/consumption_rate"
+                        android:layout_width="0dp"
+                        android:layout_weight="0.7"
+                        android:background="@drawable/shape_edittext"
+                        android:padding="3dip"
+                        android:text="0"
+                        android:textColor="@color/colorPrimaryDark"
+                        android:textSize="32sp"
+                        android:textStyle="bold" />
+                </TableRow>
             </TableLayout>
 
             <com.github.anastr.speedviewlib.SpeedView

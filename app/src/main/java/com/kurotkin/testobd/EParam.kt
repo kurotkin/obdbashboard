@@ -8,5 +8,6 @@ data class EParam(
     val massAirFlow: String,
     val oilTemp: String,
     val fuel: String,
-    val airTemperature: String
+    val airTemperature: String,
+    val consumptionRate: String
 )
