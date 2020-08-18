@@ -175,11 +175,6 @@ class MainActivity : AppCompatActivity() {
                 LineFeedOffCommand().run(socket.inputStream, socket.outputStream)                       // "AT L0"
                 TimeoutCommand(200).run(socket.inputStream, socket.outputStream)                // "AT ST " + timeout
                 SelectProtocolCommand(ObdProtocols.AUTO).run(socket.inputStream, socket.outputStream)   // "AT SP " + protocol
-            } catch (e: Exception){
-                str.onError(e)
-            }
-
-            try {
                 val engineRpmCommand = RPMCommand()
                 val speedCommand = Speed()
                 val loadCommand = LoadCommand()
