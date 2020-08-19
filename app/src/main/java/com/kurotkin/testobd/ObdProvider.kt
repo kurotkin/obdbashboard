@@ -9,16 +9,14 @@ import android.content.Context
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import com.kurotkin.testobd.obd.commands.Speed
+import com.kurotkin.testobd.obd.commands.TTemp
 import com.kurotkin.testobd.obd.commands.control.ModuleVoltageCommand
 import com.kurotkin.testobd.obd.commands.engine.LoadCommand
 import com.kurotkin.testobd.obd.commands.engine.MassAirFlowCommand
 import com.kurotkin.testobd.obd.commands.engine.RPMCommand
 import com.kurotkin.testobd.obd.commands.fuel.ConsumptionRateCommand
 import com.kurotkin.testobd.obd.commands.fuel.FuelLevelCommand
-import com.kurotkin.testobd.obd.commands.protocol.EchoOffCommand
-import com.kurotkin.testobd.obd.commands.protocol.LineFeedOffCommand
-import com.kurotkin.testobd.obd.commands.protocol.SelectProtocolCommand
-import com.kurotkin.testobd.obd.commands.protocol.TimeoutCommand
+import com.kurotkin.testobd.obd.commands.protocol.*
 import com.kurotkin.testobd.obd.commands.temperature.AmbientAirTemperatureCommand
 import com.kurotkin.testobd.obd.commands.temperature.EngineCoolantTemperatureCommand
 import com.kurotkin.testobd.obd.enums.ObdProtocols
@@ -32,9 +30,52 @@ import kotlin.collections.ArrayList
 
 class ObdProvider {
 
+    fun bluetoothWork2(deviceSelectAddress: String): Observable<EParam> =
+        Observable.create{ str ->
+            var socket : BluetoothSocket?
+
+            try {
+                val btAdapter = BluetoothAdapter.getDefaultAdapter()
+                val device: BluetoothDevice = btAdapter.getRemoteDevice(deviceSelectAddress)
+                val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+                socket = device.createInsecureRfcommSocketToServiceRecord(uuid)
+                socket.connect()
+
+                EchoOffCommand().run(socket.inputStream, socket.outputStream)                           // "AT E0"
+                LineFeedOffCommand().run(socket.inputStream, socket.outputStream)                       // "AT L0"
+                TimeoutCommand(200).run(socket.inputStream, socket.outputStream)                // "AT ST " + timeout
+                SelectProtocolCommand(ObdProtocols.AUTO).run(socket.inputStream, socket.outputStream)   // "AT SP " + protocol
+                SelectHeaderCommand("7E1").run(socket.inputStream, socket.outputStream)
+
+                val tempCommand = TTemp()
+                while (!Thread.currentThread().isInterrupted && socket != null) {
+                    tempCommand.run(socket.inputStream, socket.outputStream)
+                    str.onNext(EParam(
+                        speed = tempCommand.temp,
+                        rpm = "",
+                        load = "01",
+                        voltage = "",
+                        massAirFlow = "",
+                        oilTemp = "",
+                        fuel = "02",
+                        airTemperature = "",
+                        consumptionRate = ""
+                    ))
+                }
+
+            } catch (e: IOException){
+                str.onError(e)
+            } catch (e: Exception){
+                str.onError(e)
+            }
+
+            str.onComplete()
+        }
+
     fun bluetoothWork(deviceSelectAddress: String): Observable<EParam> =
         Observable.create{ str ->
             var socket : BluetoothSocket? = null
+
             try {
                 val btAdapter = BluetoothAdapter.getDefaultAdapter()
                 val device: BluetoothDevice = btAdapter.getRemoteDevice(deviceSelectAddress)

@@ -62,7 +62,7 @@ class PanelFragment : Fragment() {
     }
 
     fun run(adr: String){
-        val v = ObdProvider().bluetoothWork(adr)
+        val v = ObdProvider().bluetoothWork2(adr)
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
