@@ -1,6 +1,6 @@
 package com.kurotkin.testobd.obd.commands
 
-class TTemp : ObdCommand("221e3f") {
+class TTemp : ObdCommand("22 1e3f") {
     var temp: Int = 0
 
     override fun getName() =  "TTemp"
